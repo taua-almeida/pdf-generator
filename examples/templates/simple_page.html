@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %} {{ title }} {% endblock %} </title>
+    <style>
+        .centered {
+            text-align: center;
+        }
+
+        .centered table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        #footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="centered">
+        <h1>{% block content %} {{ content }} {% endblock %}</h1>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+            {% for p in people %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td>{{ p.value }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div id="footer">
+            {% block footer %}
+            &copy; Copyright 2023 by <a href="https://github.com/taua-almeida">Tauã Almeida</a>.
+            {% endblock %}
+        </div>
+    </div>
+
+</body>
+
+</html>
