@@ -12,8 +12,8 @@ if __name__ == "__main__":
     }
 
     pdf = PDFGenerator.from_jinja(
-        "./examples/templates/",
+        "./examples/templates",
         data=data,
-        ignore_templates=["simple_page.html"],
+        template_name="simple_page.html",
     )
     pdf.generate_pdf("examples/jinja_pdf.pdf")

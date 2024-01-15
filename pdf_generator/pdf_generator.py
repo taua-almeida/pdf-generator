@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 from pydantic import BaseModel
 from weasyprint import CSS, HTML
 
+from .config import PageConfig
 from .types import SourceTypes
 
 
@@ -14,22 +15,28 @@ class PDFGenerator:
         html_content: str,
         source_types: SourceTypes,
         stylesheets: Optional[List[str]],
+        page_config: PageConfig | str,
     ):
         self.html_content = html_content
         self.source_types = source_types
         self.stylesheets = stylesheets or []
-        self._size: str = "A4"
+        self.page_config: str | PageConfig = page_config
 
     @classmethod
     def from_html(
-        cls, html: str, stylesheets: Optional[List[str]] = []
+        cls,
+        html: str,
+        stylesheets: Optional[List[str]] = [],
+        page_config: PageConfig | str | None = None,
     ) -> "PDFGenerator":
+        if page_config is None:
+            page_config = PageConfig()
         if os.path.isfile(html):
             with open(html, "r") as f:
                 html_string = f.read()
             return cls(html_string, SourceTypes.HTML, stylesheets)
 
-        return cls(html, SourceTypes.HTML, stylesheets)
+        return cls(html, SourceTypes.HTML, stylesheets, page_config)
 
     @classmethod
     def from_jinja(
@@ -39,6 +46,8 @@ class PDFGenerator:
         stylesheets: Optional[List[str]] = [],
         env_config: Environment | None = None,
         template_name: str | None = None,
+        page_config: PageConfig | str | None = None,
+        ignore_templates: list[str] | None = None,
     ) -> "PDFGenerator":
         if isinstance(data, BaseModel):
             data = data.model_dump()
@@ -55,6 +64,8 @@ class PDFGenerator:
                 templates = env.list_templates()
                 html_content = ""
                 for t in templates:
+                    if ignore_templates and t in ignore_templates:
+                        continue
                     template = env.get_template(t)
                     html_content += template.render(data)
         elif os.path.isfile(template_source):
@@ -66,16 +77,26 @@ class PDFGenerator:
                 "Template source must be either a directory or a file"
             )
 
-        return cls(html_content, SourceTypes.JINJA, stylesheets)
+        if page_config is None:
+            page_config = PageConfig()
+
+        return cls(html_content, SourceTypes.JINJA, stylesheets, page_config)
+
+    def _setup_page(self) -> str:
+        if isinstance(self.page_config, PageConfig):
+            return f"""
+            @page {{
+                size: {self.page_config.size};
+                margin: {self.page_config.margin};
+                orientation: {self.page_config.orientation};
+            }}
+            """
+        else:
+            return self.page_config
 
     def _create_pdf(self, output_file: str | None = None) -> bytes | None:
         html_pdf = HTML(string=self.html_content, base_url="/")
-        base_css = f"""
-        @page {{
-            size: {self._size};
-            margin: 0;
-        }}
-        """
+        base_css = self._setup_page()
         css = [CSS(string=base_css)]
         for stylesheet in self.stylesheets:
             if os.path.isfile(stylesheet):

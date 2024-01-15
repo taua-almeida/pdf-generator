@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %} {{ title }} {% endblock %} </title>
+    <style>
+        .centered {
+            text-align: center;
+        }
+
+        .centered table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        #footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="centered">
+        {% block content %} {% endblock %}
+    </div>
+
+</body>
+
+</html>
