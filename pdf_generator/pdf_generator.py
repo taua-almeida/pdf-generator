@@ -115,6 +115,11 @@ class PDFGenerator:
         for stylesheet in self.stylesheets:
             if os.path.isfile(stylesheet):
                 css.append(CSS(filename=stylesheet))
+            elif os.path.isdir(stylesheet):
+                for file in os.listdir(stylesheet):
+                    if file.endswith(".css"):
+                        full_path = os.path.join(stylesheet, file)
+                        css.append(CSS(filename=full_path))
             else:
                 css.append(CSS(string=stylesheet))
         if output_file is None:
