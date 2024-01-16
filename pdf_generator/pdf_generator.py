@@ -15,19 +15,19 @@ class PDFGenerator:
         html_content: str,
         source_types: SourceTypes,
         stylesheets: Optional[List[str]],
-        page_config: PageConfig | str,
+        page_config: Type[PageConfig] | str,
     ):
         self.html_content = html_content
         self.source_types = source_types
         self.stylesheets = stylesheets or []
-        self.page_config: str | PageConfig = page_config
+        self.page_config: str | Type[PageConfig] = page_config
 
     @classmethod
     def from_html(
         cls,
         html: str,
         stylesheets: Optional[List[str]] = [],
-        page_config: PageConfig | str | None = None,
+        page_config: Type[PageConfig] | str | None = None,
     ) -> "PDFGenerator":
         if page_config is None:
             page_config = PageConfig()
@@ -46,32 +46,46 @@ class PDFGenerator:
         stylesheets: Optional[List[str]] = [],
         env_config: Environment | None = None,
         template_name: str | None = None,
-        page_config: PageConfig | str | None = None,
+        page_config: Type[PageConfig] | str | None = None,
         ignore_templates: list[str] | None = None,
+        data_mapping: dict[str, dict | Type[BaseModel]] | None = None,
     ) -> "PDFGenerator":
         if isinstance(data, BaseModel):
             data = data.model_dump()
-        # Check if template_source is a directory or a file
+
+        # Initialize Jinja environment
         if os.path.isdir(template_source):
             env = env_config or Environment(
                 loader=FileSystemLoader(template_source),
                 autoescape=select_autoescape(["html", "xml"]),
             )
-            if template_name:
-                template = env.get_template(template_name)
-                html_content = template.render(data)
-            else:
-                templates = env.list_templates()
-                html_content = ""
-                for t in templates:
-                    if ignore_templates and t in ignore_templates:
-                        continue
-                    template = env.get_template(t)
-                    html_content += template.render(data)
+            html_content = ""
+            templates = (
+                env.list_templates() if template_name is None else [template_name]
+            )
+            for t in templates:
+                if ignore_templates and t in ignore_templates:
+                    continue
+                template = env.get_template(t)
+                # Check if specific data is provided for this template in data_mapping
+                if data_mapping and t in data_mapping:
+                    template_data = data_mapping[t]
+                else:
+                    template_data = data
+                if isinstance(template_data, BaseModel):
+                    template_data = template_data.model_dump()
+                html_content += template.render(template_data)
         elif os.path.isfile(template_source):
             with open(template_source, "r") as file:
                 template = Template(file.read())
-                html_content = template.render(data)
+                # Check if specific data is provided for this template in data_mapping
+                if data_mapping and template_name in data_mapping:
+                    template_data = data_mapping[template_name]
+                else:
+                    template_data = data
+                if isinstance(template_data, BaseModel):
+                    template_data = template_data.model_dump()
+                html_content = template.render(template_data)
         else:
             raise FileNotFoundError(
                 "Template source must be either a directory or a file"

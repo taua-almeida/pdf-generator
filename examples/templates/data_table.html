@@ -1,0 +1,15 @@
+{% extends "base_layout.html" %}
+{% block data_table %}
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Value</th>
+    </tr>
+    {% for p in people %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.value }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

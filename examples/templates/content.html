@@ -1,19 +1,10 @@
 {% extends "base_layout.html" %}
 {% block content %}
 <h1>{{ content }}</h1>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Value</th>
-    </tr>
-    {% for p in people %}
-    <tr>
-        <td>{{ p.name }}</td>
-        <td>{{ p.value }}</td>
-    </tr>
-    {% endfor %}
-</table>
-<div id="footer">
-    &copy; Copyright 2023 by <a href="https://github.com/taua-almeida">Tauã Almeida</a>.
-</div>
+<p>
+    This is a simple example of a template that extends another template.
+    The template that this one extends is called <code>base_layout.html</code>.
+    The <code>base_layout.html</code> template defines blocks that child templates
+    can override.
+</p>
 {% endblock %}
